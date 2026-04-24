@@ -12,6 +12,16 @@ const brandInput = document.getElementById("brand");
 const imageUrlInput = document.getElementById("imageUrl");
 const priceInput = document.getElementById("price");
 
+// uguale a details perché se nell'URL ho l'ID modifico l'oggetto, altrmenti lo creo
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+console.log(id);
+
+// così richiamo method e url nel fetch
+const method = id ? "PUT" : "POST";
+const url = id ? product + id : product;
+
 // funzione per creare nuovo prodotto
 
 const createProductObject = () => {
@@ -23,6 +33,37 @@ const createProductObject = () => {
     price: Number(priceInput.value),
   };
 };
+
+// form compilato con i dati che ho se devo modificare
+const fillForm = () => {
+  if (id) {
+    fetch(product + id, {
+      headers: {
+        Authorization: authorization,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Errore nel recupero del prodotto");
+        }
+      })
+      .then((singleProduct) => {
+        nameInput.value = singleProduct.name;
+        descriptionInput.value = singleProduct.description;
+        brandInput.value = singleProduct.brand;
+        imageUrlInput.value = singleProduct.imageUrl;
+        priceInput.value = singleProduct.price;
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("Errore nel caricamento del prodotto da modificare");
+      });
+  }
+};
+
+fillForm();
 
 productForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -43,8 +84,8 @@ productForm.addEventListener("submit", (e) => {
 
   const newProduct = createProductObject();
 
-  fetch(product, {
-    method: "POST",
+  fetch(url, {
+    method: method,
     body: JSON.stringify(newProduct),
     headers: {
       "Content-Type": "application/json",
@@ -53,11 +94,11 @@ productForm.addEventListener("submit", (e) => {
   })
     .then((response) => {
       if (response.ok) {
-        alert("Prodotto creato!");
+        alert(id ? "Prodotto modificato!" : "Prodotto creato!");
         productForm.reset();
       } else {
         throw new Error(
-          "Si è verificato un errore nella creazione del prodotto",
+          "Si è verificato un errore nella creazione/modifica del prodotto",
         );
       }
     })
